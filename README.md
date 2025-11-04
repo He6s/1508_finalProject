@@ -15,7 +15,7 @@ Outputs are saved under `./runs/ie_penalized/`.
 
 ```bash
 # Clone
-git clone <YOUR_REPO_URL> recsim-project
+git clone https://github.com/He6s/1508_finalProject.git recsim-project
 cd recsim-project
 
 # Create & activate Python 3.8 environment (Conda)
