@@ -1,4 +1,4 @@
-# RecSim Minimal Project
+# RecSim Project
 
 This repo runs Google **RecSim**’s pre-implemented `interest_exploration` environment and adds a tiny **environment modification** (our required novelty): a **repetition penalty** in the user choice model (see `overrides/recsim/environments/interest_exploration/choice_model.py`).  
 Outputs are saved under `./runs/ie_penalized/`.
