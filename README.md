@@ -1,32 +1,42 @@
-# RecSim Project
+# RecSim Project – Interest Exploration + Repetition Penalty
 
-This repo runs Google **RecSim**’s pre-implemented `interest_exploration` environment and adds a tiny **environment modification** (our required novelty): a **repetition penalty** in the user choice model (see `overrides/recsim/environments/interest_exploration/choice_model.py`).  
-Outputs are saved under `./runs/ie_penalized/`.
+This repo runs Google **RecSim**’s `interest_exploration` environment and adds a small **environment modification**:  
+a **repetition penalty** in the user choice model.
 
----
-
-## 1) Prerequisites
-- **Python 3.8** (use Conda so everyone has the same version)
-- macOS / Linux / Windows (Anaconda Prompt)
+- Custom choice model: `overrides/recsim/environments/interest_exploration/choice_model.py`
+- Run outputs: `./runs/<run-name>/...`
 
 ---
 
-## 2) Quickstart (copy these commands)
+## 1. Environment setup (do this once)
+
+We only support this stack (because RecSim + Dopamine + TF1 are cursed):
+
+- **Python**: 3.7
+- **Conda env**: `recsim37`
+- **OS**: Windows 10/11 (CPU only is fine)
+
+In **Anaconda Prompt**:
 
 ```bash
-# Clone
-git clone https://github.com/He6s/1508_finalProject.git recsim-project
-cd recsim-project
+# Clone the repo
+git clone https://github.com/He6s/1508_finalProject.git
+cd 1508_finalProject
 
-# Create & activate Python 3.8 environment (Conda)
-conda create -n recsim38 python=3.8 -y
-conda activate recsim38
-python -V     # should print 3.8.x
+# Create + activate Python 3.7 env
+conda create -n recsim37 python=3.7 -y
+conda activate recsim37
+python -V   # should show 3.7.x
 
-# Install dependencies using the env’s pip
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+# Install the exact packages we use
+pip install --upgrade pip
 
-# Run
-python code.py
-# (or) ./scripts/run_ie.sh
+pip install \
+  "tensorflow==1.15.0" \
+  "dopamine-rl==2.0.5" \
+  "recsim==0.2.4" \
+  "numpy==1.18.5" \
+  "protobuf==3.20.3" \
+  "gin-config==0.1.1" \
+  "atari-py==0.2.6" \
+  "absl-py"
