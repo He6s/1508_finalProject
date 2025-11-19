@@ -1,4 +1,4 @@
-git+https://github.com/google/dopamine.git
+#git+https://github.com/google/dopamine.git
 recsim
 gin-config==0.5.0
 absl-py
