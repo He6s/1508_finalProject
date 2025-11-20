@@ -1,5 +1,5 @@
 
-  === random_baseline_long ===
+=== random_baseline_long ===
   Num episodes: 100
   Mean return : 21.400
   Median      : 21.000
