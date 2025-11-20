@@ -19,9 +19,7 @@ for reproducing them if needed.
 
 ---
 
-## 1. Repository structure (where things are)
-
-Only folders/scripts that matter for the report are listed here.
+## 1. Repository structure 
 
 - **Environment modification**
   - `overrides/recsim/environments/interest_exploration/choice_model.py`  
@@ -64,9 +62,6 @@ Only folders/scripts that matter for the report are listed here.
     → bar chart of mean return (Random, Bandit, RL λ=0, RL λ=0.2).
   - `results/diversity_bar.png`  
     → bar chart of mean diversity (Random vs Bandit).
-
-These files are enough to write the report and slides without re-running
-anything.
 
 ---
 
