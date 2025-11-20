@@ -1,94 +1,205 @@
-# RecSim Project – Interest Exploration + Repetition Penalty
+# RecSim Project – Summary & Report Guide
 
-This repo runs Google **RecSim**’s `interest_exploration` environment and adds a small **environment modification**:  
-a **repetition penalty** in the user choice model.
+This repo uses Google **RecSim**’s `interest_exploration` environment and adds a
+**repetition penalty** to the user choice model. We compare:
 
-- Custom choice model: `overrides/recsim/environments/interest_exploration/choice_model.py`
-- Run outputs: `./runs/<run-name>/...`
+- Random baseline
+- Bandit baseline (epsilon-greedy over slates)
+- RL agents with:
+  - λ = 0.0 (no repetition penalty)
+  - λ = 0.2 (with repetition penalty)
+
+All the code has been run. This document just tells you **where to find things for the report and slides**.
 
 ---
 
-## 1. Environment setup (do this once)
+## 1. Key ideas (for Introduction / Method)
 
-We only support this stack (because RecSim + Dopamine + TF1 are cursed):
+- Environment: `recsim.environments.interest_exploration`
+- Novelty / diversity mechanism:
+  - We modify the **choice model** so that recommending the same topic repeatedly is penalized.
+  - Implementation file:
+    - `overrides/recsim/environments/interest_exploration/choice_model.py`
+  - Hyperparameter:
+    - `rep_penalty` (λ) – 0.0 or 0.2 in our final runs.
 
-- **Python**: 3.7
-- **Conda env**: `recsim37`
-- **OS**: Windows 10/11 (CPU only is fine)
+- RL wrapper:
+  - File: `code.py`
+  - Calls `recsim.main` with custom flags, including `--rep-penalty` for λ.
 
-In **Anaconda Prompt**:
+You can describe the project as:  
+> “We extend RecSim’s interest_exploration environment with a repetition penalty in the choice model, then compare random, bandit, and RL agents in terms of cumulative reward and (for baselines) slate diversity.”
 
-```bash
-# Clone the repo
-git clone https://github.com/He6s/1508_finalProject.git
-cd 1508_finalProject
+---
 
-# Create + activate Python 3.7 env
-conda create -n recsim37 python=3.7 -y
-conda activate recsim37
-python -V   # should show 3.7.x
+## 2. Important code files (for Methodology section)
 
-# Install the exact packages we use
-pip install --upgrade pip
+All code you might want to reference:
 
-pip install \
-  "tensorflow==1.15.0" \
-  "dopamine-rl==2.0.5" \
-  "recsim==0.2.4" \
-  "numpy==1.18.5" \
-  "protobuf==3.20.3" \
-  "gin-config==0.1.1" \
-  "atari-py==0.2.6" \
-  "absl-py"
+- **Environment modification**
+  - `overrides/recsim/environments/interest_exploration/choice_model.py`  
+    → where λ (repetition penalty) is applied in the user choice model.
 
-
-## Project status
-
-### What’s done
-
-- **Environment & tooling**
-  - Working Conda env `recsim37` on Windows with TensorFlow 1.15, Dopamine, and RecSim.
-  - Patched `gin.tf` / TensorFlow summary issues so `python -m recsim.main` runs without crashing.
-
-- **Core experiments**
-  - Novelty implemented: **repetition penalty** in  
-    `overrides/recsim/environments/interest_exploration/choice_model.py`.
-  - RL training wrapper: `code.py` calls `recsim.main` with:
-    - `--run-name`, `--rep-penalty`, `--max-steps-per-episode`,  
-      `--num-iterations`, `--max-training-steps`, `--max-eval-episodes`.
-  - Completed runs (results under `runs/<run-name>/...`):
-    - `random_baseline` – random policy.
-    - `smoke_test_lambda0` – short sanity check, λ = 0.0.
-    - `lambda_0`, `lambda_0_long` – RL, λ = 0.0.
-    - `lambda_0_2`, `lambda_0_2_long` – RL, λ = 0.2.
-
-- **Evaluation tools**
-  - `run_random_baseline.py` – runs the random policy and writes  
-    `runs/random_baseline/eval_random/returns_random`.
-  - `analyze_returns.py` – reads `runs/*/eval_*/returns_*` and prints
-    num episodes, mean, median, min, max for each run.
-
-- **Repo hygiene**
-  - `.gitignore` ignores heavy training logs: `runs/*/train/` and `runs/*/eval_*/`.
-  - Only small summary files (`runs/.../returns_*`) are tracked in git.
-
-### What’s left to do
+- **RL runner**
+  - `code.py`  
+    → wrapper around `recsim.main` that sets run name, λ, training steps, etc.
 
 - **Baselines**
-  - Finish and run `run_bandit_baseline.py` (simple heuristic / bandit baseline).
-  - Compare: random vs. bandit vs. RL (λ = 0.0 vs. λ > 0.0) using `analyze_returns.py`.
+  - `run_random_baseline.py`  
+    → random policy, also computes a simple diversity metric.
+  - `run_bandit_baseline.py`  
+    → epsilon-greedy bandit over entire slates, also computes diversity.
 
-- **Analysis & plots**
-  - Add a small plotting script (e.g. `plot_returns.py`) to visualize
-    mean returns with variability (error bars or per-episode curves).
-  - Write a short interpretation of results:
-    - RL vs. random.
-    - Effect of the repetition penalty (λ = 0 vs. λ = 0.2).
+- **Evaluation / plotting**
+  - `analyze_returns.py`  
+    → reads `runs/*/eval_*/returns_*` and prints mean, median, min, max.
+  - `plot_results.py`  
+    → hard-coded with final numbers; generates the bar plots used in the report.
 
-- **Report / documentation**
-  - Integrate final setup, baselines, and results into the course report.
-  - Make sure README has a “How to reproduce” section:
-    - How to run RL experiments via `code.py ...`.
-    - How to run baselines (`run_random_baseline.py`, `run_bandit_baseline.py`).
-    - How to summarize results with `analyze_returns.py`.
+You **do not** need to rerun any of these – final outputs are already saved.
 
+---
+
+## 3. Final runs used in the report
+
+All final run directories are under `runs/`:
+
+- `runs/random_baseline_long`
+- `runs/bandit_baseline_long`
+- `runs/lambda_0_long`
+- `runs/lambda_0_2_long`
+
+Each has:
+
+- `eval_* / returns_*` – per-episode returns
+- For baselines only:
+  - `eval_random/diversity_random`
+  - `eval_bandit/diversity_bandit`  
+
+These are the **only runs used** for tables and plots.
+
+### 3.1 Reward statistics (from `results/final_analyze_returns.txt`)
+
+Use these numbers directly in the “Numerical Experiments” table:
+
+| Run name             | Description                     | Episodes | Mean return | Median | Min | Max |
+|----------------------|----------------------------------|----------|-------------|--------|-----|-----|
+| `random_baseline_long` | Random policy baseline          | 100      | **21.400**  | 21.0   | 12  | 30  |
+| `bandit_baseline_long` | Epsilon-greedy bandit baseline  | 100      | **21.290**  | 21.0   | 14  | 32  |
+| `lambda_0_long`        | RL, λ = 0.0 (no penalty)        | 5        | **137.450** | 132.0  | 124 | 152.215 |
+| `lambda_0_2_long`      | RL, λ = 0.2 (repetition penalty)| 5        | **141.600** | 140.0  | 124 | 160 |
+
+Source file:  
+- `results/final_analyze_returns.txt`
+
+Suggested usage:
+
+- **Numerical Experiments section**: include a table like above.
+- **Discussion section**:
+  - RL (both λ=0 and λ=0.2) massively outperforms random and bandit (~21 vs ~140).
+  - Bandit does **not** improve over random in this slate setting.
+
+### 3.2 Diversity statistics (for baselines)
+
+We measure diversity per episode as:
+
+> `diversity = (# distinct document IDs shown) / (slate_size × #steps)`
+
+Final means (from `results/final_diversity.txt`):
+
+- `random_baseline_long`:
+  - mean diversity ≈ **0.080**
+- `bandit_baseline_long`:
+  - mean diversity ≈ **0.070**
+
+Source file:  
+- `results/final_diversity.txt`
+
+Suggested usage:
+
+- Mention that **bandit slightly reduces diversity** compared to random (it tends to replay “good” slates once found).
+- This supports the idea that naive exploitation can harm novelty.
+
+---
+
+## 4. Figures (for report + slides)
+
+Generated by `plot_results.py` and already saved:
+
+- `results/mean_return_bar.png`
+  - Bar chart of mean return for:
+    - Random baseline
+    - Bandit baseline
+    - RL λ=0
+    - RL λ=0.2
+  - Good for “Numerical Experiments” and slides.
+
+- `results/diversity_bar.png`
+  - Bar chart of mean diversity for:
+    - Random baseline
+    - Bandit baseline
+  - Good for explaining the diversity / novelty story in the Discussion.
+
+You can just drop these images into the PDF and PowerPoint without rerunning anything.
+
+---
+
+## 5. How this maps to the report template
+
+Here’s a rough mapping from report sections to files/results:
+
+- **Introduction**
+  - High-level problem: repeated recommendations vs long-term engagement.
+  - Summarize repetition penalty idea (see Section 1 of this doc).
+
+- **Preliminaries / Problem Formulation**
+  - Environment: `interest_exploration` (describe state, action = slate, reward).
+  - Mention λ (rep_penalty) as an extra term in the choice model.
+
+- **Design / Methodology**
+  - Point to:
+    - `choice_model.py` for the repetition penalty.
+    - `code.py` for the RL training wrapper.
+    - `run_random_baseline.py`, `run_bandit_baseline.py` for baselines.
+  - Briefly describe:
+    - Random policy.
+    - Epsilon-greedy bandit over slates.
+    - RL agent with λ = 0 and λ = 0.2.
+
+- **Numerical Experiments**
+  - Use the table in **3.1** and the figure `mean_return_bar.png`.
+  - Clearly state:
+    - Setup (episodes, max steps per episode).
+    - Which runs: `random_baseline_long`, `bandit_baseline_long`, `lambda_0_long`, `lambda_0_2_long`.
+
+- **Discussion**
+  - Use diversity numbers in **3.2** and `diversity_bar.png`.
+  - Points you can make:
+    - Random vs bandit: similar reward, but bandit slightly lower diversity.
+    - RL vs baselines: huge gain in reward.
+    - λ = 0 vs λ = 0.2:
+      - Both achieve high reward (λ=0.2 slightly higher in our final runs).
+      - λ=0.2 is motivated by improving novelty / reducing repetition, even if we only quantified diversity on the baselines.
+    - Limitations: diversity for RL policies not fully measured; slate space is huge so bandit may struggle.
+
+- **Conclusion**
+  - Summarize:
+    - Repetition penalty as a simple environment modification to encourage novelty.
+    - RL can reach much higher cumulative reward than random/bandit.
+    - There is a trade-off between exploitation and diversity that needs careful design.
+
+---
+
+## 6. TL;DR for teammates
+
+If you’re writing the report or slides and don’t want to touch code:
+
+- Use **Section 3.1** table for all **reward numbers**.
+- Use **Section 3.2** for **diversity numbers**.
+- Grab figures from:
+  - `results/mean_return_bar.png`
+  - `results/diversity_bar.png`
+- Use the file references in **Sections 1–2** when you need to say  
+  “this is implemented in file X” in the Method / Design parts.
+
+Everything needed for the write-up is already in the repo – no need to run anything.
