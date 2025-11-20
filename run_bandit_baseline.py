@@ -12,11 +12,9 @@ def make_env(seed: int = 0):
     root = pathlib.Path(__file__).parent.resolve()
     overrides_dir = root / "overrides"
 
-    # Make our local overrides/recsim/... shadow site-packages (use our choice_model).
     if overrides_dir.exists():
         sys.path.insert(0, str(overrides_dir))
 
-    # Import after tweaking sys.path so overrides take effect.
     from recsim.environments import interest_exploration
 
     env_config = {
@@ -27,7 +25,6 @@ def make_env(seed: int = 0):
     }
     env = interest_exploration.create_environment(env_config)
 
-    # Seed env if possible
     if hasattr(env, "seed"):
         env.seed(seed)
 
