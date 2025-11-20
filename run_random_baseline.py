@@ -7,12 +7,17 @@ This script:
 - Runs a purely random policy for N episodes.
 - Saves episodic returns under runs/<run_name>/eval_random/returns_random,
   so analyze_returns.py can read it.
+- Also computes a simple diversity metric per episode:
+
+    diversity = (# distinct document IDs shown) / (slate_size * #steps)
+
+  and saves it to runs/<run_name>/eval_random/diversity_random.
 """
 
 import argparse
 import pathlib
 import sys
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 
@@ -32,13 +37,17 @@ def make_env(seed: int = 0):
         "slate_size": 5,
         "num_candidates": 20,
         "seed": seed,
-        "resample_documents": True,  
+        "resample_documents": True,
     }
     return interest_exploration.create_environment(env_config)
 
 
-def run_random(num_episodes: int, max_steps: int, seed: int = 0) -> List[float]:
-    """Run a random policy and return episodic returns."""
+def run_random(
+    num_episodes: int,
+    max_steps: int,
+    seed: int = 0,
+) -> Tuple[List[float], List[float]]:
+    """Run a random policy and return episodic returns and diversities."""
     env = make_env(seed=seed)
 
     # Seed numpy + env if possible
@@ -47,22 +56,46 @@ def run_random(num_episodes: int, max_steps: int, seed: int = 0) -> List[float]:
         env.seed(seed)
 
     returns: List[float] = []
+    diversities: List[float] = []
+
+    slate_size = 5  # must match env_config
 
     for ep in range(num_episodes):
         obs = env.reset()
         total_reward = 0.0
 
+        # Track which documents we have recommended this episode
+        episode_docs = set()
+        steps = 0
+
         for t in range(max_steps):
             # Sample a random action from the env's action space.
             action = env.action_space.sample()
+
+            # Record all doc IDs in this slate for diversity metric
+            action_arr = np.asarray(action).ravel().tolist()
+            for doc_id in action_arr:
+                episode_docs.add(int(doc_id))
+
             obs, reward, done, info = env.step(action)
             total_reward += float(reward)
+            steps += 1
+
             if done:
                 break
 
         returns.append(total_reward)
 
-    return returns
+        # Compute diversity for this episode:
+        # fraction of unique docs across all slate positions.
+        if steps > 0:
+            total_positions = slate_size * steps
+            diversity = len(episode_docs) / float(total_positions)
+        else:
+            diversity = 0.0
+        diversities.append(diversity)
+
+    return returns, diversities
 
 
 def save_returns(run_name: str, returns: List[float]) -> pathlib.Path:
@@ -76,6 +109,21 @@ def save_returns(run_name: str, returns: List[float]) -> pathlib.Path:
     with out_path.open("w") as f:
         for r in returns:
             f.write(f"{r}\n")
+
+    return out_path
+
+
+def save_diversities(run_name: str, diversities: List[float]) -> pathlib.Path:
+    """Save per-episode diversity values."""
+    root = pathlib.Path(__file__).parent.resolve()
+    run_dir = root / "runs" / run_name
+    eval_dir = run_dir / "eval_random"
+    eval_dir.mkdir(parents=True, exist_ok=True)
+
+    out_path = eval_dir / "diversity_random"
+    with out_path.open("w") as f:
+        for d in diversities:
+            f.write(f"{d}\n")
 
     return out_path
 
@@ -110,19 +158,24 @@ def main():
     )
     args = parser.parse_args()
 
-    returns = run_random(
+    returns, diversities = run_random(
         num_episodes=args.num_episodes,
         max_steps=args.max_steps_per_episode,
         seed=args.seed,
     )
 
-    out_path = save_returns(args.run_name, returns)
+    out_path_ret = save_returns(args.run_name, returns)
+    out_path_div = save_diversities(args.run_name, diversities)
 
     mean_ret = float(np.mean(returns))
     std_ret = float(np.std(returns))
-    print(f"Saved random baseline returns to: {out_path}")
-    print(f"Num episodes: {len(returns)}")
-    print(f"Mean return : {mean_ret:.3f}  (std: {std_ret:.3f})")
+    mean_div = float(np.mean(diversities))
+
+    print(f"Saved random baseline returns to: {out_path_ret}")
+    print(f"Saved random baseline diversities to: {out_path_div}")
+    print(f"Num episodes      : {len(returns)}")
+    print(f"Mean return       : {mean_ret:.3f}  (std: {std_ret:.3f})")
+    print(f"Mean diversity    : {mean_div:.3f}")
 
 
 if __name__ == "__main__":
