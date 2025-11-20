@@ -72,3 +72,5 @@ for reproducing them if needed.
 ```bash
 git clone https://github.com/He6s/1508_finalProject.git
 cd 1508_finalProject
+conda env create -f environment.yml
+conda activate recsim37
