@@ -1,23 +1,3 @@
-# run_bandit_baseline.py
-"""
-Bandit-style baseline for the RecSim interest_exploration environment.
-
-Idea:
-- Treat each slate (action) as an "arm".
-- Keep running averages of reward per action.
-- With epsilon-greedy, pick either:
-  - a random action (explore), or
-  - the best-mean-reward action seen so far (exploit).
-
-This is a simple non-RL baseline that's still smarter than pure random.
-
-We also compute a simple diversity metric per episode:
-
-    diversity = (# distinct document IDs shown) / (slate_size * #steps)
-
-and save it to runs/<run_name>/eval_bandit/diversity_bandit.
-"""
-
 import argparse
 import copy
 import pathlib
@@ -28,12 +8,7 @@ import numpy as np
 
 
 def make_env(seed: int = 0):
-    """Construct the interest_exploration environment with a dict config.
 
-    Mirrors run_random_baseline.py:
-    - Uses ./overrides so your custom choice_model is picked up.
-    - Uses a fixed config (slate_size, num_candidates, etc.).
-    """
     root = pathlib.Path(__file__).parent.resolve()
     overrides_dir = root / "overrides"
 
@@ -60,7 +35,6 @@ def make_env(seed: int = 0):
 
 
 def action_key(action) -> Tuple:
-    """Turn an action into a hashable key (tuple of numbers)."""
     arr = np.asarray(action)
     return tuple(arr.ravel().tolist())
 
@@ -71,35 +45,29 @@ def run_bandit(
     epsilon: float = 0.1,
     seed: int = 0,
 ) -> Tuple[List[float], List[float]]:
-    """Run epsilon-greedy bandit baseline and return episodic returns & diversities."""
     np.random.seed(seed)
     env = make_env(seed=seed)
 
     # stats[key] = [count, total_reward]
     stats: Dict[Tuple, List[float]] = {}
-    # store the actual action object we can replay
     actions_by_key: Dict[Tuple, object] = {}
 
     returns: List[float] = []
     diversities: List[float] = []
 
-    slate_size = 5  # must match env_config
+    slate_size = 5
 
     for ep in range(num_episodes):
         obs = env.reset()
         total_reward = 0.0
 
-        # Track which documents we have recommended this episode
         episode_docs = set()
         steps = 0
 
         for t in range(max_steps):
-            # Decide: explore or exploit
             if (len(stats) == 0) or (np.random.rand() < epsilon):
-                # Explore: random action
                 action = env.action_space.sample()
             else:
-                # Exploit: pick action with highest mean reward so far
                 best_key = max(
                     stats.keys(),
                     key=lambda k: stats[k][1] / stats[k][0],
@@ -108,11 +76,9 @@ def run_bandit(
 
             key = action_key(action)
 
-            # Keep a representative action object for this key
             if key not in actions_by_key:
                 actions_by_key[key] = copy.deepcopy(action)
 
-            # Record all doc IDs in this slate for diversity metric
             action_arr = np.asarray(action).ravel().tolist()
             for doc_id in action_arr:
                 episode_docs.add(int(doc_id))
@@ -122,18 +88,16 @@ def run_bandit(
             total_reward += r
             steps += 1
 
-            # Update bandit stats
             if key not in stats:
                 stats[key] = [0.0, 0.0]
-            stats[key][0] += 1.0          # count
-            stats[key][1] += r            # total_reward
+            stats[key][0] += 1.0
+            stats[key][1] += r
 
             if done:
                 break
 
         returns.append(total_reward)
 
-        # Compute diversity for this episode
         if steps > 0:
             total_positions = slate_size * steps
             diversity = len(episode_docs) / float(total_positions)

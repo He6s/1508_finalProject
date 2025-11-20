@@ -56,10 +56,8 @@ def get_args():
 
 def main(args):
     root = pathlib.Path(__file__).parent.resolve()
-    # Make our override take precedence over installed recsim
     os.environ["PYTHONPATH"] = f"{root}/overrides:" + os.environ.get("PYTHONPATH", "")
 
-    # 👉 NEW: pass repetition penalty to the env via an env var
     os.environ["IE_REP_PENALTY"] = str(args.rep_penalty)
 
     outdir = root / "runs" / args.run_name

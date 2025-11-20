@@ -1,19 +1,3 @@
-# run_random_baseline.py
-"""
-Random baseline for the RecSim interest_exploration environment.
-
-This script:
-- Uses the same overridden RecSim environment (via ./overrides).
-- Runs a purely random policy for N episodes.
-- Saves episodic returns under runs/<run_name>/eval_random/returns_random,
-  so analyze_returns.py can read it.
-- Also computes a simple diversity metric per episode:
-
-    diversity = (# distinct document IDs shown) / (slate_size * #steps)
-
-  and saves it to runs/<run_name>/eval_random/diversity_random.
-"""
-
 import argparse
 import pathlib
 import sys
@@ -23,7 +7,6 @@ import numpy as np
 
 
 def make_env(seed: int = 0):
-    """Construct the interest_exploration environment with a dict config."""
     root = pathlib.Path(__file__).parent.resolve()
     overrides_dir = root / "overrides"
 
@@ -47,10 +30,8 @@ def run_random(
     max_steps: int,
     seed: int = 0,
 ) -> Tuple[List[float], List[float]]:
-    """Run a random policy and return episodic returns and diversities."""
     env = make_env(seed=seed)
 
-    # Seed numpy + env if possible
     np.random.seed(seed)
     if hasattr(env, "seed"):
         env.seed(seed)
@@ -58,21 +39,18 @@ def run_random(
     returns: List[float] = []
     diversities: List[float] = []
 
-    slate_size = 5  # must match env_config
+    slate_size = 5  
 
     for ep in range(num_episodes):
         obs = env.reset()
         total_reward = 0.0
 
-        # Track which documents we have recommended this episode
         episode_docs = set()
         steps = 0
 
         for t in range(max_steps):
-            # Sample a random action from the env's action space.
             action = env.action_space.sample()
 
-            # Record all doc IDs in this slate for diversity metric
             action_arr = np.asarray(action).ravel().tolist()
             for doc_id in action_arr:
                 episode_docs.add(int(doc_id))
@@ -86,8 +64,6 @@ def run_random(
 
         returns.append(total_reward)
 
-        # Compute diversity for this episode:
-        # fraction of unique docs across all slate positions.
         if steps > 0:
             total_positions = slate_size * steps
             diversity = len(episode_docs) / float(total_positions)

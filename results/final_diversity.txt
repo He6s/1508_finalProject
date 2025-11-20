@@ -1,0 +1,9 @@
+diversity_random:
+Num episodes      : 100
+Mean return       : 21.550  (std: 3.777)
+Mean diversity    : 0.080
+
+diversity_long:
+Num episodes      : 100
+Mean return       : 21.540  (std: 4.227)
+Mean diversity    : 0.070
