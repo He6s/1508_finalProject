@@ -67,10 +67,17 @@ for reproducing them if needed.
 
 ## 2. Setup
 
-### 2.1 Clone the repository
-
-```bash
 git clone https://github.com/He6s/1508_finalProject.git
-cd 1508_finalProject
 conda env create -f environment.yml
 conda activate recsim37
+
+## 3. Commands
+
+Random baseline: python run_random_baseline.py --run-name random_baseline_long --num-episodes 100 --max-steps-per-episode 50 --seed 0
+Bandit baseline: python run_bandit_baseline.py --run-name bandit_baseline_long --num-episodes 100 --max-steps-per-episode 50 --epsilon 0.1 --seed 0
+RL Agents (with/without rep. penalty): python code.py --run-name lambda_0_long --rep-penalty 0.0      # RL, λ = 0.0
+                                       python code.py --run-name lambda_0_2_long --rep-penalty 0.2    # RL, λ = 0.2
+
+
+
+
