@@ -5,7 +5,7 @@ custom **repetition penalty** in the user choice model. We treat this as a
 sequential recommendation problem and compare four policies:
 
 - **Random baseline**
-- **Bandit baseline** (epsilon-greedy over slates)
+- **Collaborative filtering (bandit) baseline** (epsilon-greedy over slates, learning from past user feedback)
 - **RL agent, λ = 0.0** (no repetition penalty)
 - **RL agent, λ = 0.2** (with repetition penalty)
 
